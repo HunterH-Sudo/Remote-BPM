@@ -1,1 +1,3 @@
 A web based metronome control system for live performance environments. This application enables musicians to remotely manage click tracks used in in-ear monitor systems by selecting songs, adjusting tempo (BPM), and starting or stopping playback. The system runs on a central host machine and is accessible from any device on the local network, making it ideal for church worship teams and live stage coordination.
+
+In order to run you need to pip install flask and pygame.
