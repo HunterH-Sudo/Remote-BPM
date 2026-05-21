@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Church Metronome</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+        
+            margin: 0;
+            padding: 30px;
+            min-height: 100vh;
+        
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        
+            box-sizing: border-box;
+        
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* DARK MODE (default) */
+        body {
+            background: #1e1e1e;
+            color: white;
+            border-color: #ffffff;
+        }
+
+        /* LIGHT MODE */
+        @media (prefers-color-scheme: light) {
+            body {
+                background: #f5f5f5;
+                color: #111;
+                border-color: #111;
+            }
+        
+            .song-row {
+                background: #e8e8e8;
+            }
+        
+            input {
+                background: white;
+                color: black;
+            }
+        
+            .stop-bar {
+                background: #ddd;
+                border-top: 2px solid #bbb;
+            }
+        }
+
+        h1 {
+            font-size: 4rem;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        #songs {
+            width: 100%;
+            max-width: 1200px;
+
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .song-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+            padding: 25px;
+            border-radius: 20px;
+            box-sizing: border-box;
+            border-style: solid;
+            border-width: 10px;
+        }
+
+        input {
+            font-size: 2rem;
+
+            padding: 20px;
+
+            border: none;
+            border-radius: 15px;
+
+            box-sizing: border-box;
+        }
+
+        .song-name {
+            flex: 1;
+            text-align: center;
+        }
+
+        .bpm-input {
+            width: 170px;
+            text-align: center;
+        }
+
+        button {
+            font-size: 2rem;
+
+            padding: 20px 30px;
+
+            border: none;
+            border-radius: 15px;
+
+            cursor: pointer;
+        }
+
+        button:active {
+            transform: scale(0.97);
+        }
+
+        .play-button {
+            background: #3498db;
+            color: white;
+        }
+
+        .remove-button {
+            background: #555;
+            color: white;
+        }
+
+        .add-button {
+            background: #27ae60;
+            color: white;
+
+            margin-top: 30px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .stop-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        
+            padding: 20px;
+        
+
+            border-top: 2px solid #333;
+        
+            display: flex;
+            justify-content: center;
+        
+            z-index: 9999;
+        }
+
+        .stop-button {
+            background: #e74c3c;
+            color: white;
+            width: 100%;
+            max-width: 700px;
+            padding: 25px;
+            font-size: 2.5rem;
+            border-radius: 15px;
+        }
+
+        .current-song {
+            margin-top: 40px;
+            font-size: 2.5rem;
+            text-align: center;
+        }
+
+        @media (max-width: 900px) {
+
+            h1 {
+                font-size: 3rem;
+            }
+
+            .song-row {
+                flex-direction: column;
+            }
+
+            .song-name,
+            .bpm-input,
+            .play-button,
+            .remove-button {
+                width: 100%;
+            }
+
+            button {
+                font-size: 2.2rem;
+            }
+
+            .stop-button {
+                font-size: 2.5rem;
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <h1>Church Metronome</h1>
+
+    <div id="songs"></div>
+
+    <button class="add-button" onclick="addSong()">
+        + Add Song
+    </button>
+
+    <div class="stop-bar">
+        <button class="stop-button" onclick="stopMetronome()">
+            STOP
+        </button>
+    </div>
+
+    <div class="current-song" id="currentSong">
+        No song playing
+    </div>
+
+    <script>
+
+        let songCounter = 0;
+
+        function addSong(name = "New Song", bpm = 120) {
+
+            songCounter++;
+
+            const songsDiv = document.getElementById("songs");
+
+            const row = document.createElement("div");
+            row.className = "song-row";
+            row.id = `songRow${songCounter}`;
+
+            row.innerHTML = `
+                <input
+                    class="song-name"
+                    id="songName${songCounter}"
+                    value="${name}"
+                >
+
+                <input
+                    class="bpm-input"
+                    id="songBpm${songCounter}"
+                    type="number"
+                    value="${bpm}"
+                >
+
+                <button
+                    class="play-button"
+                    onclick="playSong(${songCounter})"
+                >
+                    Play
+                </button>
+
+                <button
+                    class="remove-button"
+                    onclick="removeSong(${songCounter})"
+                >
+                    Delete
+                </button>
+            `;
+
+            songsDiv.appendChild(row);
+        }
+
+        function removeSong(songId) {
+
+            const row = document.getElementById(`songRow${songId}`);
+
+            if (row) {
+                row.remove();
+            }
+        }
+
+        async function playSong(songId) {
+
+            const songName =
+                document.getElementById(`songName${songId}`).value;
+
+            const bpm =
+                document.getElementById(`songBpm${songId}`).value;
+
+            // Set BPM
+            await fetch("/set_bpm", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    bpm: bpm
+                })
+            });
+
+            // Play
+            await fetch(`/play/${encodeURIComponent(songName)}`, {
+                method: "POST"
+            });
+
+            // Update UI
+            document.getElementById("currentSong").innerText =
+                `Playing: ${songName} (${bpm} BPM)`;
+        }
+
+        async function stopMetronome() {
+
+            await fetch("/stop", {
+                method: "POST"
+            });
+
+            document.getElementById("currentSong").innerText =
+                "No song playing";
+        }
+
+        // Starter songs
+        addSong("Song 1", 80);
+        addSong("Song 2", 80);
+        addSong("Song 3", 80);
+        addSong("Song 4", 80);
+        addSong("Song 5", 80);
+
+    </script>
+
+</body>
+
+</html>
