@@ -2,10 +2,14 @@ from flask import Flask, render_template, request, jsonify
 import threading
 import time
 import pygame
+import json
+import os
 
 app = Flask(__name__)
 
 current_bpm = 120
+
+SONGS_FILE = "songs.json"
 
 # Thread control
 stop_event = threading.Event()
@@ -16,7 +20,39 @@ pygame.mixer.init()
 click_sound = pygame.mixer.Sound("click.wav")
 
 
+# --------------------------
+# SONG STORAGE
+# --------------------------
+
+def load_songs():
+
+    if not os.path.exists(SONGS_FILE):
+
+        default_songs = [
+            {"name": "Song 1", "bpm": 80},
+            {"name": "Song 2", "bpm": 80},
+        ]
+
+        save_songs(default_songs)
+
+        return default_songs
+
+    with open(SONGS_FILE, "r") as f:
+        return json.load(f)
+
+
+def save_songs(songs):
+
+    with open(SONGS_FILE, "w") as f:
+        json.dump(songs, f, indent=4)
+
+
+# --------------------------
+# METRONOME
+# --------------------------
+
 def metronome_loop():
+
     global current_bpm
 
     while not stop_event.is_set():
@@ -25,14 +61,35 @@ def metronome_loop():
 
         interval = 60.0 / current_bpm
 
-        # Wait but allow instant stopping
         if stop_event.wait(interval):
             break
 
 
+# --------------------------
+# ROUTES
+# --------------------------
+
 @app.route("/")
 def index():
     return render_template("index.html")
+
+
+@app.route("/songs", methods=["GET"])
+def get_songs():
+
+    return jsonify(load_songs())
+
+
+@app.route("/songs", methods=["POST"])
+def update_songs():
+
+    songs = request.get_json()
+
+    save_songs(songs)
+
+    return jsonify({
+        "status": "saved"
+    })
 
 
 @app.route("/play/<song_name>", methods=["POST"])
@@ -42,17 +99,13 @@ def play_song(song_name):
 
     print(f"Starting: {song_name}")
 
-    # Stop previous metronome
     stop_event.set()
 
-    # Wait for old thread to fully stop
     if metronome_thread and metronome_thread.is_alive():
         metronome_thread.join()
 
-    # Reset stop flag
     stop_event.clear()
 
-    # Start new thread
     metronome_thread = threading.Thread(target=metronome_loop)
     metronome_thread.daemon = True
     metronome_thread.start()
@@ -82,7 +135,6 @@ def set_bpm():
 
     bpm = int(data["bpm"])
 
-    # Clamp safe values
     bpm = max(30, min(300, bpm))
 
     current_bpm = bpm
@@ -96,6 +148,7 @@ def set_bpm():
 
 
 if __name__ == "__main__":
+
     print("Starting Church Metronome...")
 
     app.run(

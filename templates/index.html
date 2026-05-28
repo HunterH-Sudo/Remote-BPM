@@ -219,108 +219,160 @@
         No song playing
     </div>
 
-    <script>
+<script>
 
-        let songCounter = 0;
+    let songCounter = 0;
 
-        function addSong(name = "New Song", bpm = 120) {
+    async function loadSongs() {
 
-            songCounter++;
+        const response = await fetch("/songs");
 
-            const songsDiv = document.getElementById("songs");
+        const songs = await response.json();
 
-            const row = document.createElement("div");
-            row.className = "song-row";
-            row.id = `songRow${songCounter}`;
+        document.getElementById("songs").innerHTML = "";
 
-            row.innerHTML = `
-                <input
-                    class="song-name"
-                    id="songName${songCounter}"
-                    value="${name}"
-                >
+        songCounter = 0;
 
-                <input
-                    class="bpm-input"
-                    id="songBpm${songCounter}"
-                    type="number"
-                    value="${bpm}"
-                >
+        songs.forEach(song => {
+            addSong(song.name, song.bpm, false);
+        });
+    }
 
-                <button
-                    class="play-button"
-                    onclick="playSong(${songCounter})"
-                >
-                    Play
-                </button>
+    async function saveSongs() {
 
-                <button
-                    class="remove-button"
-                    onclick="removeSong(${songCounter})"
-                >
-                    Delete
-                </button>
-            `;
+        const rows =
+            document.querySelectorAll(".song-row");
 
-            songsDiv.appendChild(row);
-        }
+        let songs = [];
 
-        function removeSong(songId) {
+        rows.forEach((row) => {
 
-            const row = document.getElementById(`songRow${songId}`);
+            const id =
+                row.id.replace("songRow", "");
 
-            if (row) {
-                row.remove();
-            }
-        }
-
-        async function playSong(songId) {
-
-            const songName =
-                document.getElementById(`songName${songId}`).value;
+            const name =
+                document.getElementById(`songName${id}`).value;
 
             const bpm =
-                document.getElementById(`songBpm${songId}`).value;
+                document.getElementById(`songBpm${id}`).value;
 
-            // Set BPM
-            await fetch("/set_bpm", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    bpm: bpm
-                })
+            songs.push({
+                name: name,
+                bpm: parseInt(bpm)
             });
+        });
 
-            // Play
-            await fetch(`/play/${encodeURIComponent(songName)}`, {
-                method: "POST"
-            });
+        await fetch("/songs", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(songs)
+        });
+    }
 
-            // Update UI
-            document.getElementById("currentSong").innerText =
-                `Playing: ${songName} (${bpm} BPM)`;
+    function addSong(name = "New Song", bpm = '', save = true) {
+
+        songCounter++;
+
+        const songsDiv =
+            document.getElementById("songs");
+
+        const row =
+            document.createElement("div");
+
+        row.className = "song-row";
+        row.id = `songRow${songCounter}`;
+
+        row.innerHTML = `
+            <input
+                class="song-name"
+                id="songName${songCounter}"
+                value="${name}"
+                onchange="saveSongs()"
+            >
+
+            <input
+                class="bpm-input"
+                id="songBpm${songCounter}"
+                type="number"
+                value="${bpm}"
+                onchange="saveSongs()"
+            >
+
+            <button
+                class="play-button"
+                onclick="playSong(${songCounter})"
+            >
+                Play
+            </button>
+
+            <button
+                class="remove-button"
+                onclick="removeSong(${songCounter})"
+            >
+                Delete
+            </button>
+        `;
+
+        songsDiv.appendChild(row);
+
+        if (save) {
+            saveSongs();
+        }
+    }
+
+    async function removeSong(songId) {
+
+        const row =
+            document.getElementById(`songRow${songId}`);
+
+        if (row) {
+            row.remove();
         }
 
-        async function stopMetronome() {
+        await saveSongs();
+    }
 
-            await fetch("/stop", {
-                method: "POST"
-            });
+    async function playSong(songId) {
 
-            document.getElementById("currentSong").innerText =
-                "No song playing";
-        }
+        const songName =
+            document.getElementById(`songName${songId}`).value;
 
-        // Starter songs
-        addSong("Song 1", 80);
-        addSong("Song 2", 80);
-        addSong("Song 3", 80);
-        addSong("Song 4", 80);
-        addSong("Song 5", 80);
+        const bpm =
+            document.getElementById(`songBpm${songId}`).value;
 
-    </script>
+        await fetch("/set_bpm", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                bpm: bpm
+            })
+        });
+
+        await fetch(`/play/${encodeURIComponent(songName)}`, {
+            method: "POST"
+        });
+
+        document.getElementById("currentSong").innerText =
+            `Playing: ${songName} (${bpm} BPM)`;
+    }
+
+    async function stopMetronome() {
+
+        await fetch("/stop", {
+            method: "POST"
+        });
+
+        document.getElementById("currentSong").innerText =
+            "No song playing";
+    }
+
+    loadSongs();
+
+</script>
 
 </body>
 
