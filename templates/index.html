@@ -1,379 +1,202 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <title>Church Metronome</title>
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <style>
+<style>
+body {
+    font-family: Arial;
+    margin: 0;
+    padding: 30px;
+    background: #1e1e1e;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
 
-        body {
-            font-family: Arial, sans-serif;
-        
-            margin: 0;
-            padding: 30px;
-            min-height: 100vh;
-        
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        
-            box-sizing: border-box;
-        
-            transition: background 0.3s, color 0.3s;
-        }
+h1 { font-size: 3rem; }
 
-        /* DARK MODE (default) */
-        body {
-            background: #1e1e1e;
-            color: white;
-            border-color: #ffffff;
-        }
+#songs {
+    width: 100%;
+    max-width: 1100px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
 
-        /* LIGHT MODE */
-        @media (prefers-color-scheme: light) {
-            body {
-                background: #f5f5f5;
-                color: #111;
-                border-color: #111;
-            }
-        
-            .song-row {
-                background: #e8e8e8;
-            }
-        
-            input {
-                background: white;
-                color: black;
-            }
-        
-            .stop-bar {
-                background: #ddd;
-                border-top: 2px solid #bbb;
-            }
-        }
+.song-row {
+    display: flex;
+    gap: 10px;
+    padding: 15px;
+    border-radius: 12px;
+    border: 2px solid #444;
+    align-items: center;
+}
 
-        h1 {
-            font-size: 4rem;
-            margin-bottom: 40px;
-            text-align: center;
-        }
+input, select, button {
+    font-size: 1.3rem;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+}
 
-        #songs {
-            width: 100%;
-            max-width: 1200px;
+.song-name { flex: 1; }
+.bpm-input { width: 100px; }
 
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-        }
+.play-button { background: #3498db; color: white; }
+.remove-button { background: #555; color: white; }
 
-        .song-row {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-            width: 100%;
-            padding: 25px;
-            border-radius: 20px;
-            box-sizing: border-box;
-            border-style: solid;
-            border-width: 10px;
-        }
+.add-button {
+    background: #27ae60;
+    color: white;
+    margin-top: 20px;
+    padding: 15px;
+}
 
-        input {
-            font-size: 2rem;
+.stop-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 15px;
+    background: #111;
+    display: flex;
+    justify-content: center;
+}
 
-            padding: 20px;
+.stop-button {
+    background: #e74c3c;
+    color: white;
+    width: 90%;
+    font-size: 2rem;
+}
 
-            border: none;
-            border-radius: 15px;
-
-            box-sizing: border-box;
-        }
-
-        .song-name {
-            flex: 1;
-            text-align: center;
-        }
-
-        .bpm-input {
-            width: 170px;
-            text-align: center;
-        }
-
-        button {
-            font-size: 2rem;
-
-            padding: 20px 30px;
-
-            border: none;
-            border-radius: 15px;
-
-            cursor: pointer;
-        }
-
-        button:active {
-            transform: scale(0.97);
-        }
-
-        .play-button {
-            background: #3498db;
-            color: white;
-        }
-
-        .remove-button {
-            background: #555;
-            color: white;
-        }
-
-        .add-button {
-            background: #27ae60;
-            color: white;
-
-            margin-top: 30px;
-            width: 100%;
-            max-width: 500px;
-        }
-
-        .stop-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-        
-            padding: 20px;
-        
-
-            border-top: 2px solid #333;
-        
-            display: flex;
-            justify-content: center;
-        
-            z-index: 9999;
-        }
-
-        .stop-button {
-            background: #e74c3c;
-            color: white;
-            width: 100%;
-            max-width: 700px;
-            padding: 25px;
-            font-size: 2.5rem;
-            border-radius: 15px;
-        }
-
-        .current-song {
-            margin-top: 40px;
-            font-size: 2.5rem;
-            text-align: center;
-        }
-
-        @media (max-width: 900px) {
-
-            h1 {
-                font-size: 3rem;
-            }
-
-            .song-row {
-                flex-direction: column;
-            }
-
-            .song-name,
-            .bpm-input,
-            .play-button,
-            .remove-button {
-                width: 100%;
-            }
-
-            button {
-                font-size: 2.2rem;
-            }
-
-            .stop-button {
-                font-size: 2.5rem;
-            }
-        }
-
-    </style>
+.active {
+    border: 3px solid #27ae60;
+}
+</style>
 </head>
 
 <body>
 
-    <h1>Church Metronome</h1>
+<h1>Church Metronome</h1>
 
-    <div id="songs"></div>
+<div id="songs"></div>
 
-    <button class="add-button" onclick="addSong()">
-        + Add Song
-    </button>
+<button class="add-button" onclick="addSong()">+ Add Song</button>
 
-    <div class="stop-bar">
-        <button class="stop-button" onclick="stopMetronome()">
-            STOP
-        </button>
-    </div>
+<div class="stop-bar">
+    <button class="stop-button" onclick="stopMetronome()">STOP</button>
+</div>
 
-    <div class="current-song" id="currentSong">
-        No song playing
-    </div>
+<div id="currentSong" style="margin-top:40px;font-size:1.5rem;">
+    No song playing
+</div>
 
 <script>
 
-    let songCounter = 0;
+function uuid() {
+    return crypto.randomUUID();
+}
 
-    async function loadSongs() {
+async function loadSongs() {
+    const res = await fetch("/songs");
+    const songs = await res.json();
 
-        const response = await fetch("/songs");
+    document.getElementById("songs").innerHTML = "";
 
-        const songs = await response.json();
+    songs.forEach(s => addSong(s));
+}
 
-        document.getElementById("songs").innerHTML = "";
+function addSong(song = {}) {
+    const id = song.id || uuid();
 
-        songCounter = 0;
+    const row = document.createElement("div");
+    row.className = "song-row";
+    row.id = `song-${id}`;
 
-        songs.forEach(song => {
-            addSong(song.name, song.bpm, false);
-        });
-    }
+    row.innerHTML = `
+        <input class="song-name" id="name-${id}" value="${song.name || "New Song"}" onchange="saveSongs()">
 
-    async function saveSongs() {
+        <input class="bpm-input" id="bpm-${id}" type="number" value="${song.bpm || 120}" onchange="saveSongs()">
 
-        const rows =
-            document.querySelectorAll(".song-row");
+        <select id="sig-${id}" onchange="saveSongs()">
+            <option value="2/2" ${song.signature==="2/2"?"selected":""}>2/2</option>
+            <option value="3/4" ${song.signature==="3/4"?"selected":""}>3/4</option>
+            <option value="4/4" ${song.signature==="4/4"||!song.signature?"selected":""}>4/4</option>
+            <option value="6/8" ${song.signature==="6/8"?"selected":""}>6/8</option>
+        </select>
 
-        let songs = [];
+        <button class="play-button" onclick="playSong('${id}')">Play</button>
+        <button class="remove-button" onclick="removeSong('${id}')">Delete</button>
+    `;
 
-        rows.forEach((row) => {
+    document.getElementById("songs").appendChild(row);
+    saveSongs();
+}
 
-            const id =
-                row.id.replace("songRow", "");
+async function saveSongs() {
+    const rows = document.querySelectorAll(".song-row");
 
-            const name =
-                document.getElementById(`songName${id}`).value;
+    const songs = Array.from(rows).map(r => {
+        const id = r.id.replace("song-", "");
 
-            const bpm =
-                document.getElementById(`songBpm${id}`).value;
+        return {
+            id,
+            name: document.getElementById(`name-${id}`).value,
+            bpm: parseInt(document.getElementById(`bpm-${id}`).value),
+            signature: document.getElementById(`sig-${id}`).value
+        };
+    });
 
-            songs.push({
-                name: name,
-                bpm: parseInt(bpm)
-            });
-        });
+    await fetch("/songs", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify(songs)
+    });
+}
 
-        await fetch("/songs", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(songs)
-        });
-    }
+async function playSong(id) {
+    const name = document.getElementById(`name-${id}`).value;
+    const bpm = document.getElementById(`bpm-${id}`).value;
+    const sig = document.getElementById(`sig-${id}`).value;
 
-    function addSong(name = "New Song", bpm = '', save = true) {
+    await fetch("/set_bpm", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({bpm})
+    });
 
-        songCounter++;
+    await fetch("/set_signature", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({signature: sig})
+    });
 
-        const songsDiv =
-            document.getElementById("songs");
+    await fetch(`/play/${encodeURIComponent(name)}`, {method:"POST"});
 
-        const row =
-            document.createElement("div");
+    document.getElementById("currentSong").innerText =
+        `Playing: ${name} (${bpm} BPM, ${sig})`;
 
-        row.className = "song-row";
-        row.id = `songRow${songCounter}`;
+    document.querySelectorAll(".song-row").forEach(r => r.classList.remove("active"));
+    document.getElementById(`song-${id}`).classList.add("active");
+}
 
-        row.innerHTML = `
-            <input
-                class="song-name"
-                id="songName${songCounter}"
-                value="${name}"
-                onchange="saveSongs()"
-            >
+async function stopMetronome() {
+    await fetch("/stop", {method:"POST"});
+    document.getElementById("currentSong").innerText = "No song playing";
+}
 
-            <input
-                class="bpm-input"
-                id="songBpm${songCounter}"
-                type="number"
-                value="${bpm}"
-                onchange="saveSongs()"
-            >
+async function removeSong(id) {
+    document.getElementById(`song-${id}`).remove();
+    await saveSongs();
+}
 
-            <button
-                class="play-button"
-                onclick="playSong(${songCounter})"
-            >
-                Play
-            </button>
-
-            <button
-                class="remove-button"
-                onclick="removeSong(${songCounter})"
-            >
-                Delete
-            </button>
-        `;
-
-        songsDiv.appendChild(row);
-
-        if (save) {
-            saveSongs();
-        }
-    }
-
-    async function removeSong(songId) {
-
-        const row =
-            document.getElementById(`songRow${songId}`);
-
-        if (row) {
-            row.remove();
-        }
-
-        await saveSongs();
-    }
-
-    async function playSong(songId) {
-
-        const songName =
-            document.getElementById(`songName${songId}`).value;
-
-        const bpm =
-            document.getElementById(`songBpm${songId}`).value;
-
-        await fetch("/set_bpm", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                bpm: bpm
-            })
-        });
-
-        await fetch(`/play/${encodeURIComponent(songName)}`, {
-            method: "POST"
-        });
-
-        document.getElementById("currentSong").innerText =
-            `Playing: ${songName} (${bpm} BPM)`;
-    }
-
-    async function stopMetronome() {
-
-        await fetch("/stop", {
-            method: "POST"
-        });
-
-        document.getElementById("currentSong").innerText =
-            "No song playing";
-    }
-
-    loadSongs();
+loadSongs();
 
 </script>
 
 </body>
-
 </html>
