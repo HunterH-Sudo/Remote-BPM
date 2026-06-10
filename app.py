@@ -6,7 +6,6 @@ import json
 import os
 
 app = Flask(__name__)
-APP_VERSION = "1.0.0"
 
 SONGS_FILE = "songs.json"
 
