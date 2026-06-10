@@ -75,8 +75,6 @@ def run_update_if_needed():
 
         print("Update complete. Restart required.")
         os.execv(sys.executable, ["python"] + sys.argv)
-        python = sys.executable
-        os.execl(python, python, *sys.argv)
 
     else:
         print("No update needed.")
