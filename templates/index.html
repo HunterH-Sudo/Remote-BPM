@@ -9,14 +9,19 @@ body {
     font-family: Arial;
     margin: 0;
     padding: 30px;
+    padding-bottom: 140px; /* room for STOP bar */
     background: #1e1e1e;
     color: white;
     display: flex;
     flex-direction: column;
     align-items: center;
+    box-sizing: border-box;
 }
 
-h1 { font-size: 3rem; }
+h1 {
+    font-size: 3rem;
+    text-align: center;
+}
 
 #songs {
     width: 100%;
@@ -33,20 +38,36 @@ h1 { font-size: 3rem; }
     border-radius: 12px;
     border: 2px solid #444;
     align-items: center;
+    box-sizing: border-box;
 }
 
-input, select, button {
+input,
+select,
+button {
     font-size: 1.3rem;
     padding: 10px;
     border-radius: 8px;
     border: none;
+    box-sizing: border-box;
 }
 
-.song-name { flex: 1; }
-.bpm-input { width: 100px; }
+.song-name {
+    flex: 1;
+}
 
-.play-button { background: #3498db; color: white; }
-.remove-button { background: #555; color: white; }
+.bpm-input {
+    width: 100px;
+}
+
+.play-button {
+    background: #3498db;
+    color: white;
+}
+
+.remove-button {
+    background: #555;
+    color: white;
+}
 
 .add-button {
     background: #27ae60;
@@ -70,11 +91,81 @@ input, select, button {
     background: #e74c3c;
     color: white;
     width: 90%;
+    max-width: 700px;
     font-size: 2rem;
 }
 
 .active {
     border: 3px solid #27ae60;
+}
+
+/* ---------- MOBILE / TABLET ---------- */
+
+@media (max-width: 900px) {
+
+    body {
+        padding: 15px;
+        padding-bottom: 180px;
+    }
+
+    h1 {
+        font-size: 2.2rem;
+    }
+
+    .song-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .song-name,
+    .bpm-input,
+    select,
+    .play-button,
+    .remove-button {
+        width: 100%;
+    }
+
+    input,
+    select,
+    button {
+        font-size: 1.5rem;
+        padding: 18px;
+    }
+
+    .bpm-input {
+        width: 100%;
+    }
+
+    .stop-button {
+        width: 100%;
+        font-size: 2rem;
+    }
+
+    #currentSong {
+        text-align: center;
+        padding-bottom: 120px;
+    }
+}
+
+/* ---------- SMALL PHONES ---------- */
+
+@media (max-width: 480px) {
+
+    h1 {
+        font-size: 1.8rem;
+    }
+
+    input,
+    select,
+    button {
+        font-size: 1.3rem;
+        padding: 16px;
+    }
+
+    .stop-button {
+        font-size: 1.7rem;
+    }
 }
 </style>
 </head>
@@ -98,7 +189,7 @@ input, select, button {
 <script>
 
 function uuid() {
-    return crypto.randomUUID();
+    return Date.now().toString() + Math.floor(Math.random() * 100000);
 }
 
 async function loadSongs() {
@@ -133,27 +224,36 @@ function addSong(song = {}) {
         <button class="remove-button" onclick="removeSong('${id}')">Delete</button>
     `;
 
-    document.getElementById("songs").appendChild(row);
+    document.getElementById("songs").appendChild(row);    
     saveSongs();
+    
 }
 
 async function saveSongs() {
     const rows = document.querySelectorAll(".song-row");
 
-    const songs = Array.from(rows).map(r => {
+    const songs = [];
+
+    rows.forEach(r => {
         const id = r.id.replace("song-", "");
 
-        return {
-            id,
-            name: document.getElementById(`name-${id}`).value,
-            bpm: parseInt(document.getElementById(`bpm-${id}`).value),
-            signature: document.getElementById(`sig-${id}`).value
-        };
+        const nameEl = document.getElementById(`name-${id}`);
+        const bpmEl = document.getElementById(`bpm-${id}`);
+        const sigEl = document.getElementById(`sig-${id}`);
+
+        if (!nameEl || !bpmEl || !sigEl) return;
+
+        songs.push({
+            id: id,
+            name: nameEl.value,
+            bpm: parseInt(bpmEl.value || 120),
+            signature: sigEl.value
+        });
     });
 
     await fetch("/songs", {
         method: "POST",
-        headers: {"Content-Type":"application/json"},
+        headers: {"Content-Type": "application/json"},
         body: JSON.stringify(songs)
     });
 }

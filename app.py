@@ -114,13 +114,23 @@ def get_songs():
 def update_songs():
     songs = request.get_json()
 
-    # ensure IDs exist
-    for i, s in enumerate(songs):
-        if "id" not in s:
-            s["id"] = str(i)
+    if not isinstance(songs, list):
+        return jsonify({"error": "invalid data"}), 400
 
-    save_songs(songs)
-    return jsonify({"status": "saved"})
+    # ensure valid structure
+    cleaned = []
+    for s in songs:
+        if "name" in s:
+            cleaned.append({
+                "id": s.get("id", str(time.time())),
+                "name": s["name"],
+                "bpm": int(s.get("bpm", 120)),
+                "signature": s.get("signature", "4/4")
+            })
+
+    save_songs(cleaned)
+
+    return jsonify({"status": "saved", "count": len(cleaned)})
 
 
 @app.route("/play/<song_name>", methods=["POST"])
