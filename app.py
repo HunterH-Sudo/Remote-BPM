@@ -6,6 +6,7 @@ import json
 import os
 
 app = Flask(__name__)
+APP_VERSION = "1.0.0"
 
 SONGS_FILE = "songs.json"
 
@@ -95,7 +96,9 @@ def metronome_loop():
         if stop_event.wait(sleep_time):
             break
 
-
+def get_version():
+    with open("version.json") as f:
+        return json.load(f)["version"]
 # --------------------------
 # ROUTES
 # --------------------------
@@ -179,7 +182,16 @@ def set_signature():
 
     return jsonify({"status": "ok", "signature": current_signature})
 
+@app.route("/version")
+def version():
+    return jsonify({"version": get_version()})
+
 
 if __name__ == "__main__":
+    import updater
+    updater.run_update_if_needed()
     print("Starting Church Metronome...")
     app.run(host="0.0.0.0", port=80)
+    
+
+    
